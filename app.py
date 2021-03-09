@@ -82,4 +82,5 @@ def app_ipa():
 
     return send_file(ipa_path)
 
-app.run(host='0.0.0.0', port=8086)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=2458)
