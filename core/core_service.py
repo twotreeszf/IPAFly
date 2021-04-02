@@ -93,7 +93,8 @@ class CoreService:
         info_path = cls.info_path(app_id)
         with open(info_path) as f:
             app_info = json.loads(f.read())
-            app_info['icon_data'] = app_info['icon_data']['py/b64']
+            if app_info['icon_data']:
+                app_info['icon_data'] = app_info['icon_data']['py/b64']
         return app_info
 
     @classmethod
@@ -152,20 +153,27 @@ class CoreService:
 
             ipa = IPAInfo()
             ipa.bundle_id = plist_dic['CFBundleIdentifier']
-            ipa.app_name = plist_dic['CFBundleDisplayName']
+            if 'CFBundleDisplayName' in plist_dic:
+                ipa.app_name = plist_dic['CFBundleDisplayName']
+            else:
+                ipa.app_name = plist_dic['CFBundleName']
             ipa.app_version = plist_dic['CFBundleShortVersionString']
 
-            main_icon_name = plist_dic['CFBundleIcons']['CFBundlePrimaryIcon']['CFBundleIconFiles'][-1]
-
-            main_icon_path = None
-            for path in name_list:
-                file_name = os.path.basename(path)
-                if file_name.startswith(main_icon_name):
-                    main_icon_path = path
-                    break
-            icon_data = ipa_file.read(main_icon_path)
-            icon_data = cls.normalize_png(icon_data)
-            ipa.icon_data = icon_data
+            main_icon_name = None
+            try:
+                main_icon_name = plist_dic['CFBundleIcons']['CFBundlePrimaryIcon']['CFBundleIconFiles'][-1]
+            except:
+                pass
+            if main_icon_name:
+                main_icon_path = None
+                for path in name_list:
+                    file_name = os.path.basename(path)
+                    if file_name.startswith(main_icon_name):
+                        main_icon_path = path
+                        break
+                icon_data = ipa_file.read(main_icon_path)
+                icon_data = cls.normalize_png(icon_data)
+                ipa.icon_data = icon_data
 
             return ipa
 
